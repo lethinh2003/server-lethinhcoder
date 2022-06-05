@@ -5,37 +5,37 @@ const AppError = require("../utils/app_error");
 const catchAsync = require("../utils/catch_async");
 
 exports.getComments = catchAsync(async (req, res, next) => {
-  try {
-    const id = req.user._id;
-    const page = req.query.page * 1 || 1;
-    const results = req.query.results * 1 || 10;
-    const skip = (page - 1) * results;
+  const accountID = req.query.accountID;
+  const page = req.query.page * 1 || 1;
+  const results = req.query.results * 1 || 10;
+  const skip = (page - 1) * results;
 
-    const findComments = await RepComment.find({
-      user: { $in: [id] },
+  const findComments = await RepComment.find({
+    user: { $in: [accountID] },
+  })
+    .skip(skip)
+    .limit(results)
+    .populate({
+      path: "user",
+      select: "-__v -password",
     })
-      .skip(skip)
-      .limit(results)
-      .populate({
-        path: "user",
-        select: "-__v -password",
-      })
 
-      .populate({
-        path: "comment",
-        select: "-__v",
-      })
-      .sort("-_id")
-      .select("-__v");
-    return res.status(200).json({
-      time: req.timeNow,
-      length: findComments.length,
-      status: "success",
-      data: findComments,
-    });
-  } catch (err) {
-    console.log(err);
-  }
+    .populate({
+      path: "comment",
+      select: "-__v",
+    })
+    .sort("-_id")
+    .select("-__v");
+  return res.status(200).json({
+    status: "success",
+    results: findComments.length,
+    length: findComments.length,
+    data: findComments,
+    meta: {
+      page: page,
+      results: results,
+    },
+  });
 });
 exports.deleteComments = catchAsync(async (req, res, next) => {
   const id = req.user._id;

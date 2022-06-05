@@ -183,14 +183,15 @@ exports.protect = async (req, res, next) => {
     token = req.headers.authorization.split(" ")[1];
   }
   if (!token) {
-    return invalidValue(res, "Login to get this api");
+    return invalidValue(res, "Login to continute");
   }
   try {
     const decode = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
     const user = await User.findOne({ _id: decode.id });
+
     if (!user) {
-      return invalidValue(res, "Login to get this api");
+      return invalidValue(res, "Login to continute");
     }
     // const test = await user.changedPassword(decode.iat);
     // if (test) {

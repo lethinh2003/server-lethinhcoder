@@ -10,10 +10,49 @@ const signToken = (id) => {
     expiresIn: process.env.JWT_EXPIRES,
   });
 };
+exports.getUser = catchAsync(async (req, res, next) => {
+  const { account } = req.query;
+  if (!account) {
+    return res.status(401).json({
+      status: "fail",
+      message: "Vui lòng nhập thông tin",
+    });
+  }
+
+  const user = await User.findOne({ account: account }).select("-password -__v");
+  if (!user) {
+    return res.status(404).json({
+      status: "fail",
+      message: `Không tồn tại tài khoản: ${account}`,
+    });
+  }
+  return res.status(200).json({
+    status: "success",
+    data: user,
+  });
+});
+
+exports.getDetailUser = catchAsync(async (req, res, next) => {
+  const { account } = req.body;
+  if (!account) {
+    return next(new AppError("Vui lòng nhập thông tin", 404));
+  }
+  if (req.user.account !== account) {
+    return next(new AppError("Có lỗi xảy ra khi lấy thông tin tài khoản", 404));
+  }
+  const user = await User.findOne({ account: account }).select("-password -__v");
+  return res.status(200).json({
+    status: "success",
+    data: user,
+  });
+});
 
 exports.uploadAvatar = catchAsync(async (req, res, next) => {
   if (!req.file) {
-    return next(new AppError("No file uploaded!", 404));
+    return res.status(401).json({
+      status: "fail",
+      message: `Không file nào được chọn!`,
+    });
   }
   return res.status(200).json({
     status: "success",
@@ -22,17 +61,24 @@ exports.uploadAvatar = catchAsync(async (req, res, next) => {
 });
 exports.updateUser = catchAsync(async (req, res, next) => {
   const id = req.user._id;
-  const body = {
-    avatar: req.body.avatar,
-    name: req.body.name,
-  };
-  const user = await User.findByIdAndUpdate(id, body, {
-    new: true,
-    runValidators: true,
-  }).select("-password -__v ");
+  const user = await User.findOneAndUpdate(
+    {
+      _id: id,
+    },
+    {
+      avatar: req.body.avatar,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  ).select("-password -__v ");
 
   if (!user) {
-    return next(new AppError("No user updated!", 404));
+    return res.status(404).json({
+      status: "fail",
+      message: `Không tồn tại tài khoản này`,
+    });
   }
   return res.status(200).json({
     status: "success",
@@ -85,7 +131,6 @@ exports.createUser = async (req, res) => {
     });
   }
 };
-exports.getUser = factory.getOne(User);
 exports.test = async (req, res) => {
   return res.status(200).json({
     status: "success",

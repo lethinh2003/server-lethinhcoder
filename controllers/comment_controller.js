@@ -6,13 +6,13 @@ const AppError = require("../utils/app_error");
 const catchAsync = require("../utils/catch_async");
 
 exports.getComments = catchAsync(async (req, res, next) => {
-  const id = req.user._id;
+  const accountID = req.query.accountID;
   const page = req.query.page * 1 || 1;
   const results = req.query.results * 1 || 10;
   const skip = (page - 1) * results;
 
   const findComments = await Comment.find({
-    user: { $in: [id] },
+    user: { $in: [accountID] },
   })
     .skip(skip)
     .limit(results)
@@ -31,16 +31,22 @@ exports.getComments = catchAsync(async (req, res, next) => {
 
     .sort("-_id")
     .select("-__v");
+
   return res.status(200).json({
-    time: req.timeNow,
-    length: findComments.length,
     status: "success",
+    results: findComments.length,
+    length: findComments.length,
     data: findComments,
+    meta: {
+      page: page,
+      results: results,
+    },
   });
 });
 exports.deleteComments = catchAsync(async (req, res, next) => {
   const id = req.user._id;
   const { commentId } = req.body;
+  console.log(commentId);
   const deleteCmt = Comment.findOneAndDelete({
     _id: commentId,
     user: { $in: [id] },

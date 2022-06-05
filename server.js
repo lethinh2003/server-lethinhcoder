@@ -32,15 +32,16 @@ mongoose
     console.log("DB connected");
   });
 
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 8081;
 const io = require("socket.io")(server, {
   cors: {
-    origin: process.env.CLIENT_SOCKET,
+    origin: process.env.ENDPOINT_CLIENT,
   },
 });
 let allUser = [];
 io.on("connection", (socket) => {
   console.log("New client connected " + socket.id);
+  console.log("ROOM ", io.sockets.adapter.rooms);
   socket.on("join-room-history-likes", (userId) => {
     socket.join(userId);
     socket.room_history_likes = userId;
@@ -101,7 +102,8 @@ io.on("connection", (socket) => {
         },
         { status: true }
       );
-      io.sockets.in(data).emit("read-notify");
+      console.log(data);
+      io.in(data).emit("read-notify");
     } catch (err) {
       console.log(err);
     }
@@ -146,8 +148,9 @@ io.on("connection", (socket) => {
     socket.join("homepage-express");
   });
   socket.on("send-event-homepage-express", async (id) => {
+    let dataReturn;
     if (id == 1) {
-      await System.updateMany(
+      dataReturn = await System.findOneAndUpdate(
         {},
         { $inc: { home_express1: 1 } },
         {
@@ -155,7 +158,7 @@ io.on("connection", (socket) => {
         }
       );
     } else if (id == 2) {
-      await System.updateMany(
+      dataReturn = await System.findOneAndUpdate(
         {},
         { $inc: { home_express2: 1 } },
         {
@@ -163,7 +166,7 @@ io.on("connection", (socket) => {
         }
       );
     } else if (id == 3) {
-      await System.updateMany(
+      dataReturn = await System.findOneAndUpdate(
         {},
         { $inc: { home_express3: 1 } },
         {
@@ -171,17 +174,24 @@ io.on("connection", (socket) => {
         }
       );
     } else if (id == 4) {
-      await System.updateMany(
+      dataReturn = await System.findOneAndUpdate(
         {},
         { $inc: { home_express4: 1 } },
         {
           new: true,
         }
       );
+    } else {
+      dataReturn = await System.findOneAndUpdate(
+        {},
+        { $inc: { home_views: 1 } },
+        {
+          new: true,
+        }
+      );
     }
-    const data = await System.find({});
 
-    io.sockets.in("homepage-express").emit("send-event-homepage-express", data);
+    io.sockets.in("homepage-express").emit("send-event-homepage-express", dataReturn);
   });
   socket.on("disconnecting", () => {});
   socket.on("disconnect", () => {
@@ -195,7 +205,7 @@ io.on("connection", (socket) => {
   });
 });
 server.listen(port, () => {
-  console.log("Server đang chay tren cong 3000");
+  console.log("Server đang chay tren cong", port);
 });
 process.on("unhandledRejection", (err) => {
   console.log("UNHANDLED REJECTION! 💥 Shutting down...");

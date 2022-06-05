@@ -46,8 +46,13 @@ exports.getNotifies = catchAsync(async (req, res, next) => {
     });
   return res.status(200).json({
     length: findNotifies.length,
+    results: findNotifies.length,
     status: "success",
     data: findNotifies,
+    meta: {
+      page: page,
+      results: results,
+    },
   });
 });
 exports.deleteNotifies = catchAsync(async (req, res, next) => {

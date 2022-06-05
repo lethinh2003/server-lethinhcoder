@@ -6,6 +6,7 @@ const router = express.Router();
 // router.route("/update").post(authController.protect, userController.updateUser);
 router.route("/").get(authController.protect, notifyController.getNotifies);
 router.route("/").post(authController.protect, notifyController.deleteNotifies);
+router.route("/delete").post(authController.protect, notifyController.deleteNotifies);
 // router
 //   .route("/:id")
 //   .get(musicController.getMusic)

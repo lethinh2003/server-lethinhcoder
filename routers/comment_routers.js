@@ -3,8 +3,9 @@ const commentController = require("../controllers/comment_controller");
 const authController = require("../controllers/auth_controller");
 const router = express.Router();
 
-router.route("/").get(authController.protect, commentController.getComments);
-router.route("/").post(authController.protect, commentController.deleteComments);
+router.route("/").get(commentController.getComments);
+// router.route("/").post(authController.protect, commentController.deleteComments);
+router.route("/").delete(authController.protect, commentController.deleteComments);
 router.route("/delete").post(authController.protect, commentController.deleteComments);
 router.route("/like").post(authController.protect, commentController.likeComments);
 router.route("/reply").post(authController.protect, commentController.replyComments);
