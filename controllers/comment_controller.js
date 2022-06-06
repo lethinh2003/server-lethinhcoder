@@ -206,21 +206,24 @@ exports.postComments = catchAsync(async (req, res, next) => {
   const id = req.user._id;
   const { sourceId } = req.params;
   const { content, type } = req.body;
+  let returnValue;
   if (type === "code") {
-    await Comment.create({
+    returnValue = await Comment.create({
       user: [id],
       code: [sourceId],
       content: content,
     });
   } else if (type === "blog") {
-    await Comment.create({
+    returnValue = await Comment.create({
       user: [id],
       blog: [sourceId],
       content: content,
     });
   }
+  console.log(returnValue);
   return res.status(200).json({
     status: "success",
+    data: returnValue,
     message: "Comment thành công 2",
   });
 });

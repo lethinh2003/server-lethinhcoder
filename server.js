@@ -112,6 +112,28 @@ io.on("connection", (socket) => {
     socket.join(data);
     socket.room_code = data;
   });
+  socket.on("send-new-comment", async (commentID) => {
+    const result = await Comment.findOne({
+      _id: commentID,
+    })
+      .populate({
+        path: "user",
+        select: "-__v -password",
+      })
+      .populate({
+        path: "reply",
+        select: "-__v -password",
+      })
+      .populate({
+        path: "code",
+        select: "-__v -link",
+      })
+
+      .sort("-_id")
+      .select("-__v");
+    console.log("results", result);
+    io.sockets.in(socket.id).emit("create-new-comment", result);
+  });
   socket.on("get-all-comments", async (codeId) => {
     try {
       const results = await Comment.find({
