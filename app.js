@@ -14,6 +14,7 @@ const notifyRouters = require("./routers/notify_routers");
 const commentRouters = require("./routers/comment_routers");
 const repcommentRouters = require("./routers/repcomment_routers");
 const systemRouters = require("./routers/system_routers");
+const blogRouters = require("./routers/blog_routers");
 
 const cors = require("cors");
 //MIDDLEWARE
@@ -62,6 +63,7 @@ app.use("/api/v1/notifies", notifyRouters);
 app.use("/api/v1/comments", commentRouters);
 app.use("/api/v1/reply-comments", repcommentRouters);
 app.use("/api/v1/systems", systemRouters);
+app.use("/api/v1/blogs", blogRouters);
 
 app.all("*", (req, res, next) => {
   next(new AppError(`No found ${req.originalUrl}`, 404));

@@ -49,6 +49,22 @@ const BlogSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  likes: {
+    type: Number,
+    default: 0,
+  },
+  loves: {
+    type: Number,
+    default: 0,
+  },
+  claps: {
+    type: Number,
+    default: 0,
+  },
+  happies: {
+    type: Number,
+    default: 0,
+  },
   createdAt: {
     type: String,
     default: () => new Date().toISOString(),
@@ -57,16 +73,6 @@ const BlogSchema = new mongoose.Schema({
     type: String,
   },
 });
-// CodeSchema.pre(/^find/, async function (next) {
-//   const text = keyword_extractor.extract("Haha le thinh pro", {
-//     language: "english",
-//     remove_digits: true,
-//     return_changed_case: true,
-//     remove_duplicates: false,
-//   });
-//   console.log(text);
-//   next();
-// });
 
 BlogSchema.pre("save", async function (next) {
   const year = new Date().getFullYear();
