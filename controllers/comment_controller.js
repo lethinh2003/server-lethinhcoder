@@ -61,7 +61,6 @@ exports.deleteComments = catchAsync(async (req, res, next) => {
   return res.status(204).end();
 });
 exports.likeComments = catchAsync(async (req, res, next) => {
-  console.log("like comment");
   const id = req.user._id;
   const { commentId, accountId, linkNotify } = req.body;
   const findComment = await Comment.find({

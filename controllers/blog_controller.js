@@ -7,7 +7,7 @@ exports.getBlogs = catchAsync(async (req, res, next) => {
   const results = req.query.results * 1 || 10;
   const skip = (page - 1) * results;
 
-  const findBlogs = await Blog.find({}).skip(skip).limit(results).sort("_id").select("-__v");
+  const findBlogs = await Blog.find({ status: true }).skip(skip).limit(results).sort("_id").select("-__v");
 
   return res.status(200).json({
     status: "success",
@@ -29,6 +29,7 @@ exports.getRelationshipBlogs = catchAsync(async (req, res, next) => {
 
   const findBlogs = await Blog.find({
     labels: { $in: labels },
+    status: true,
   })
     .skip(skip)
     .limit(results)
@@ -54,7 +55,7 @@ exports.postReactionBlogs = catchAsync(async (req, res, next) => {
     return next(new AppError("Lỗi cảm xúc! Vui lòng thử lại ", 404));
   }
   const createReactionBlogs = await Blog.findOneAndUpdate(
-    { _id: id },
+    { _id: id, status: true },
     {
       $inc: { [type]: 1 },
     },

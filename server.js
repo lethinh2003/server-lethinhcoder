@@ -53,6 +53,19 @@ io.on("connection", (socket) => {
     socket.join(data);
     socket.room_profile = data;
   });
+  socket.on("join-room-comment-id", (data) => {
+    socket.join(data);
+    console.log("ROOM ", io.sockets.adapter.rooms);
+  });
+  socket.on("update-count-likes", (data) => {
+    console.log(data);
+    io.sockets.in(data.id).emit("update-count-likes", data);
+  });
+  socket.on("delete-comment", (data) => {
+    console.log(data);
+    io.sockets.in(data.id).emit("delete-comment", data);
+  });
+
   socket.on("get-avatar-profile", async (data) => {
     try {
       const getUser = await User.find({
