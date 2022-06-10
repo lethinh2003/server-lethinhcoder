@@ -5,6 +5,7 @@ const axios = require("axios");
 const Notify = require("./models/Notify");
 const User = require("./models/User");
 const Comment = require("./models/Comment");
+const RepComment = require("./models/RepComment");
 const System = require("./models/System");
 const http = require("http");
 
@@ -55,7 +56,6 @@ io.on("connection", (socket) => {
   });
   socket.on("join-room-comment-id", (data) => {
     socket.join(data);
-    console.log("ROOM ", io.sockets.adapter.rooms);
   });
   socket.on("update-count-likes", (data) => {
     console.log(data);
@@ -64,6 +64,41 @@ io.on("connection", (socket) => {
   socket.on("delete-comment", (data) => {
     console.log(data);
     io.sockets.in(data.id).emit("delete-comment", data);
+  });
+  socket.on("delete-rep-comment", (data) => {
+    console.log(data);
+    io.sockets.in(data.room).emit("delete-rep-comment", data);
+  });
+  socket.on("create-rep-comment", async (data) => {
+    console.log(data);
+    const getRepComment = await RepComment.findOne({ _id: data.id }).populate({
+      path: "user",
+      select: "-__v -password",
+    });
+    const dataSend = {
+      room: data.room,
+      data: getRepComment,
+    };
+
+    io.sockets.in(data.room).emit("create-rep-comment", dataSend);
+  });
+  socket.on("create-comment", async (data) => {
+    console.log(data);
+    const getComment = await Comment.findOne({ _id: data.id })
+      .populate({
+        path: "user",
+        select: "-__v -password",
+      })
+      .populate({
+        path: "reply",
+        select: "-__v -password",
+      })
+      .populate({
+        path: "code",
+        select: "-__v -link",
+      });
+
+    io.sockets.in(data.room).emit("create-comment", getComment);
   });
 
   socket.on("get-avatar-profile", async (data) => {

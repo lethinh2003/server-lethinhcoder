@@ -81,46 +81,53 @@ exports.likeComments = catchAsync(async (req, res, next) => {
 
   //unlike
   if (checkUserLikedComment.length > 0) {
-    await Comment.findByIdAndUpdate(commentId, {
-      $pull: {
-        likes: accountId,
-      },
-    });
-    await HistoryLike.deleteOne({
-      user: { $in: [id] },
-      comment: { $in: [commentId] },
-    });
+    await Promise.all([
+      Comment.findByIdAndUpdate(commentId, {
+        $pull: {
+          likes: accountId,
+        },
+      }),
+      HistoryLike.deleteOne({
+        user: { $in: [id] },
+        comment: { $in: [commentId] },
+      }),
+    ]);
+
     return res.status(200).json({
       status: "success",
       message: "unlike",
     });
   } else {
     if (id.toString() !== findComment[0].user[0]._id.toString()) {
-      await Comment.findByIdAndUpdate(commentId, {
-        $push: {
-          likes: accountId,
-        },
-      });
-      await HistoryLike.create({
-        user: [id],
-        comment: [commentId],
-      });
-      await Notify.create({
-        link: linkNotify,
-        account_send: [id],
-        account_receive: [findComment[0].user[0]._id],
-        content: `{name} vừa like comment: "${findComment[0].content}" của bạn.`,
-      });
+      await Promise.all([
+        Comment.findByIdAndUpdate(commentId, {
+          $push: {
+            likes: accountId,
+          },
+        }),
+        HistoryLike.create({
+          user: [id],
+          comment: [commentId],
+        }),
+        Notify.create({
+          link: linkNotify,
+          account_send: [id],
+          account_receive: [findComment[0].user[0]._id],
+          content: `{name} vừa like comment: "${findComment[0].content}" của bạn.`,
+        }),
+      ]);
     } else {
-      await Comment.findByIdAndUpdate(commentId, {
-        $push: {
-          likes: accountId,
-        },
-      });
-      await HistoryLike.create({
-        user: [id],
-        comment: [commentId],
-      });
+      await Promise.all([
+        Comment.findByIdAndUpdate(commentId, {
+          $push: {
+            likes: accountId,
+          },
+        }),
+        HistoryLike.create({
+          user: [id],
+          comment: [commentId],
+        }),
+      ]);
     }
     return res.status(200).json({
       status: "success",
@@ -148,14 +155,44 @@ exports.replyComments = catchAsync(async (req, res, next) => {
       comment: [findComment[0]._id],
       content: content,
     });
+    console.log(createReplyComment);
     const updateComment = await Comment.findByIdAndUpdate(commentId, {
       $push: {
         reply: createReplyComment._id,
       },
     });
+
+    let listSendNotifies = [];
+    let listArrayCheck = [];
+
+    const loopSendNotifies = findComment[0].reply.map((item) => {
+      if (
+        !checkValid(listArrayCheck, item.user[0]._id) &&
+        item.user[0]._id.toString() !== findComment[0].user[0]._id.toString() &&
+        item.user[0]._id.toString() !== req.user._id.toString()
+      ) {
+        const newNotify = Notify.create({
+          link: linkNotify,
+          account_send: [id],
+          account_receive: [item.user[0]._id],
+          content: `{name} vừa reply: "${content}" tại comment: "${findComment[0].content}" của ${findComment[0].user[0].name}.`,
+        });
+
+        listSendNotifies.push(newNotify);
+        listArrayCheck.push({
+          accountID: item.user[0]._id,
+        });
+      }
+    });
+
+    await Promise.all(listSendNotifies);
     return res.status(200).json({
       status: "success",
       message: "Thanh cong",
+      data: createReplyComment,
+      meta: {
+        user_receive: listArrayCheck,
+      },
     });
   } else {
     const createReplyComment = await RepComment.create({
@@ -163,6 +200,7 @@ exports.replyComments = catchAsync(async (req, res, next) => {
       comment: [findComment[0]._id],
       content: content,
     });
+    console.log(createReplyComment);
     const updateComment = Comment.findByIdAndUpdate(commentId, {
       $push: {
         reply: createReplyComment._id,
@@ -179,7 +217,11 @@ exports.replyComments = catchAsync(async (req, res, next) => {
     let listArrayCheck = [];
 
     const loopSendNotifies = findComment[0].reply.map((item) => {
-      if (!checkValid(listArrayCheck, item.user[0].account)) {
+      if (
+        !checkValid(listArrayCheck, item.user[0]._id) &&
+        item.user[0]._id.toString() !== findComment[0].user[0]._id.toString() &&
+        item.user[0]._id.toString() !== req.user._id.toString()
+      ) {
         const newNotify = Notify.create({
           link: linkNotify,
           account_send: [id],
@@ -189,7 +231,7 @@ exports.replyComments = catchAsync(async (req, res, next) => {
 
         listSendNotifies.push(newNotify);
         listArrayCheck.push({
-          account: item.user[0].account,
+          accountID: item.user[0]._id,
         });
       }
     });
@@ -198,9 +240,23 @@ exports.replyComments = catchAsync(async (req, res, next) => {
     return res.status(200).json({
       status: "success",
       message: "Thanh cong",
+      data: createReplyComment,
+      meta: {
+        user_receive: listArrayCheck,
+      },
     });
   }
 });
+const checkValid = (arr, accountID) => {
+  let check = false;
+  for (let i = 0; i < arr.length; i++) {
+    if (accountID === arr[i].accountID) {
+      check = true;
+      return check;
+    }
+  }
+  return check;
+};
 exports.postComments = catchAsync(async (req, res, next) => {
   const id = req.user._id;
   const { sourceId } = req.params;
@@ -223,7 +279,7 @@ exports.postComments = catchAsync(async (req, res, next) => {
   return res.status(200).json({
     status: "success",
     data: returnValue,
-    message: "Comment thành công 2",
+    message: "Comment thành công",
   });
 });
 exports.getDetailComments = catchAsync(async (req, res, next) => {

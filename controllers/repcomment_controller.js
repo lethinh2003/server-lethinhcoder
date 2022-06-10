@@ -40,6 +40,7 @@ exports.getComments = catchAsync(async (req, res, next) => {
 exports.deleteComments = catchAsync(async (req, res, next) => {
   const id = req.user._id;
   const { commentId } = req.body;
+  console.log(commentId);
   const deleteReply = RepComment.findOneAndDelete({
     _id: commentId,
     user: { $in: [id] },
