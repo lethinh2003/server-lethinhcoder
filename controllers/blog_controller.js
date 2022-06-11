@@ -33,7 +33,7 @@ exports.getRelationshipBlogs = catchAsync(async (req, res, next) => {
   })
     .skip(skip)
     .limit(results)
-    .sort("_id")
+    .sort("-_id")
     .select("-__v");
 
   return res.status(200).json({

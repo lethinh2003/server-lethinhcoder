@@ -33,8 +33,8 @@ const sendEmail = async (options) => {
     from: process.env.SENDGRID_MAILFROM,
     to: options.email,
     subject: options.subject,
-    text: options.message,
-    // html:
+    text: options.text,
+    html: options.message,
   };
 
   await transport.sendMail(mailOptions);

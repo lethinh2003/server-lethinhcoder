@@ -16,6 +16,8 @@ const repcommentRouters = require("./routers/repcomment_routers");
 const systemRouters = require("./routers/system_routers");
 const blogRouters = require("./routers/blog_routers");
 const codeRouters = require("./routers/code_routers");
+const emailnotifyRouters = require("./routers/emailnotify_routers");
+const adminRouters = require("./routers/admin_routers");
 
 const cors = require("cors");
 //MIDDLEWARE
@@ -44,6 +46,7 @@ app.use(express.json());
 app.use(mongoSanitize());
 
 //against XSS (HTML, JS)
+app.use("/api/v1/admin", adminRouters);
 app.use(xss());
 
 //serving static file
@@ -66,6 +69,7 @@ app.use("/api/v1/reply-comments", repcommentRouters);
 app.use("/api/v1/systems", systemRouters);
 app.use("/api/v1/blogs", blogRouters);
 app.use("/api/v1/source-codes", codeRouters);
+app.use("/api/v1/subscribes", emailnotifyRouters);
 
 app.all("*", (req, res, next) => {
   next(new AppError(`No found ${req.originalUrl}`, 404));

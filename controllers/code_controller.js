@@ -3,20 +3,26 @@ const Code = require("../models/Code");
 const AppError = require("../utils/app_error");
 const catchAsync = require("../utils/catch_async");
 
-exports.getBlogs = catchAsync(async (req, res, next) => {
+exports.getCodes = catchAsync(async (req, res, next) => {
   const page = req.query.page * 1 || 1;
   const results = req.query.results * 1 || 10;
   const skip = (page - 1) * results;
 
-  const findBlogs = await Blog.find({ status: true }).skip(skip).limit(results).sort("_id").select("-__v");
+  let findCodes = Code.find({ status: true }).skip(skip).limit(results).select("-link -__v");
+  if (req.query.sort) {
+    const arraySort = req.query.sort.split(",").join(" ");
 
+    findCodes = findCodes.sort(arraySort);
+  }
+  const data = await findCodes;
   return res.status(200).json({
     status: "success",
-    results: findBlogs.length,
-    data: findBlogs,
+    results: data.length,
+    data: data,
     meta: {
       page: page,
       results: results,
+      sort: req.query.sort,
     },
   });
 });
@@ -34,7 +40,7 @@ exports.getRelationshipCodes = catchAsync(async (req, res, next) => {
   })
     .skip(skip)
     .limit(results)
-    .sort("_id")
+    .sort("-_id")
     .select("-__v -link");
 
   return res.status(200).json({
