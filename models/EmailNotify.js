@@ -8,6 +8,9 @@ const EmailNotifySchema = new mongoose.Schema({
     required: [true, "Missing email"],
     validate: [validator.isEmail, "Email is not valid"],
   },
+  token: {
+    type: String,
+  },
   createdAt: {
     type: String,
     default: () => new Date().toISOString(),

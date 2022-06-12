@@ -46,6 +46,22 @@ exports.getDetailUser = catchAsync(async (req, res, next) => {
     data: user,
   });
 });
+exports.createUser = catchAsync(async (req, res, next) => {
+  console.log("wtf");
+  const { account, password, confirmPassword, name } = req.body;
+  console.log(req.body);
+  const result = await User.create({
+    account: account,
+    password: password,
+    confirmPassword: confirmPassword,
+    name: name,
+  });
+  return res.status(201).json({
+    status: "success",
+    message: "Đăng ký tài khoản thành công. Vui lòng đăng nhập",
+    data: result,
+  });
+});
 
 exports.uploadAvatar = catchAsync(async (req, res, next) => {
   if (!req.file) {
@@ -115,22 +131,7 @@ exports.login = async (req, res) => {
     token,
   });
 };
-exports.createUser = async (req, res) => {
-  try {
-    const newUser = await User.create(req.body);
-    const token = signToken(newUser._id);
-    res.status(201).json({
-      status: "success",
-      token,
-      data: newUser,
-    });
-  } catch (err) {
-    res.status(400).json({
-      status: "err",
-      message: err,
-    });
-  }
-};
+
 exports.test = async (req, res) => {
   return res.status(200).json({
     status: "success",

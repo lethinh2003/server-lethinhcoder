@@ -1,10 +1,14 @@
 const Blog = require("../models/Blog");
 const HistoryCode = require("../models/HistoryCode");
+const HistoryUpload = require("../models/HistoryUpload");
 const Comment = require("../models/Comment");
 const RepComment = require("../models/RepComment");
 const Code = require("../models/Code");
 const User = require("../models/User");
 const AppError = require("../utils/app_error");
+const sendEmail = require("../utils/email");
+const EmailNotify = require("../models/EmailNotify");
+
 const catchAsync = require("../utils/catch_async");
 
 exports.getOverview = catchAsync(async (req, res, next) => {
@@ -40,6 +44,19 @@ exports.getSourceCodes = catchAsync(async (req, res, next) => {
   return res.status(200).json({
     status: "success",
     data: results,
+  });
+});
+exports.uploadFile = catchAsync(async (req, res, next) => {
+  if (!req.file) {
+    return next(new AppError("No file uploaded!", 404));
+  }
+  await HistoryUpload.create({
+    account: req.user.account,
+    link: req.file.path,
+  });
+  return res.status(200).json({
+    status: "success",
+    data: req.file.path,
   });
 });
 exports.getDetailSourceCode = catchAsync(async (req, res, next) => {
@@ -132,7 +149,9 @@ exports.updateDetailBlog = catchAsync(async (req, res, next) => {
   });
 });
 exports.createSourceCodes = catchAsync(async (req, res, next) => {
-  const { title, content, link, costs, images, desc, keywords, labels } = req.body;
+  const path = req.get("referer");
+
+  const { title, content, link, costs, images, desc, keywords, labels, dataSystem } = req.body;
   const result = await Code.create({
     title: title,
     content: content,
@@ -143,6 +162,42 @@ exports.createSourceCodes = catchAsync(async (req, res, next) => {
     keywords: keywords,
     labels: labels,
   });
+  const getEmailsNotify = await EmailNotify.find({});
+  const listSendEmail = [];
+  if (getEmailsNotify.length > 0) {
+    getEmailsNotify.map((item, i) => {
+      const url_unsubscribe = `${path}/unsubscribe-email/${item.token}`;
+      const url_post = `${path}/source-code/${result.slug}`;
+      const message = `
+
+    <div style=" width: 500px; padding: 10px;">
+
+      <a href=${path}><img src=${dataSystem.home_logo} style="width: 40px; height: 40px" alt="Home Logo"></img></a>
+      <span>Hi there,</span>
+      <p>Bạn ơi! Chúng tôi vừa có bài viết nè, vào xem ngay thôi. </p>
+      <p><b><a href=${url_post}>${title}</a></b> </p>
+
+      <img src=${images[0]} style="width: 200px" alt="${title}"></img>
+
+      <p style="font-weight:500">Thông tin liên hệ</p>
+      <li>Website:  <a href=${path}>${path} </a> </li>
+      <li>Zalo: <a href=${dataSystem.myself_zalo}>${dataSystem.myself_zalo_name}</a></li>
+      <li>Facebook: <a href=${dataSystem.myself_fb}>${dataSystem.myself_fb_name}</a></li>
+      <li>Email: ${dataSystem.myself_email}</li>
+      <p>Thư này được gửi tự động, vui lòng không reply lại bất cứ thông tin gì mang tính bảo mật cá nhân</p>
+      <p>Hủy đăng ký nhận thông báo mới nhất? <a href=${url_unsubscribe}>Click vào đây</a></p>
+  </div>  `;
+      listSendEmail.push(
+        sendEmail({
+          email: item.email,
+          subject: "[No Reply] Bài viết mới nhất tại LT Blog",
+          message,
+        })
+      );
+    });
+  }
+  console.log(listSendEmail);
+  await Promise.all(listSendEmail);
   return res.status(201).json({
     status: "success",
     message: "Tạo thành công",
@@ -157,7 +212,9 @@ exports.getBlogs = catchAsync(async (req, res, next) => {
   });
 });
 exports.createBlog = catchAsync(async (req, res, next) => {
-  const { title, content, images, desc, keywords, labels } = req.body;
+  const path = req.get("referer");
+
+  const { title, content, images, desc, keywords, labels, dataSystem } = req.body;
   const result = await Blog.create({
     title: title,
     content: content,
@@ -166,6 +223,42 @@ exports.createBlog = catchAsync(async (req, res, next) => {
     desc: desc,
     labels: labels,
   });
+  const getEmailsNotify = await EmailNotify.find({});
+  const listSendEmail = [];
+  if (getEmailsNotify.length > 0) {
+    getEmailsNotify.map((item, i) => {
+      const url_unsubscribe = `${path}/unsubscribe-email/${item.token}`;
+      const url_post = `${path}/blog/${result.slug}`;
+      const message = `
+
+    <div style=" width: 500px; padding: 10px;">
+
+      <a href=${path}><img src=${dataSystem.home_logo} style="width: 40px; height: 40px" alt="Home Logo"></img></a>
+      <span>Hi there,</span>
+      <p>Bạn ơi! Chúng tôi vừa có bài viết nè, vào xem ngay thôi. </p>
+      <p><b><a href=${url_post}>${title}</a></b> </p>
+
+      <img src=${images[0]} style="width: 200px" alt="${title}"></img>
+
+      <p style="font-weight:500">Thông tin liên hệ</p>
+      <li>Website:  <a href=${path}>${path} </a> </li>
+      <li>Zalo: <a href=${dataSystem.myself_zalo}>${dataSystem.myself_zalo_name}</a></li>
+      <li>Facebook: <a href=${dataSystem.myself_fb}>${dataSystem.myself_fb_name}</a></li>
+      <li>Email: ${dataSystem.myself_email}</li>
+      <p>Thư này được gửi tự động, vui lòng không reply lại bất cứ thông tin gì mang tính bảo mật cá nhân</p>
+      <p>Hủy đăng ký nhận thông báo mới nhất? <a href=${url_unsubscribe}>Click vào đây</a></p>
+  </div>  `;
+      listSendEmail.push(
+        sendEmail({
+          email: item.email,
+          subject: "[No Reply] Bài viết mới nhất tại LT Blog",
+          message,
+        })
+      );
+    });
+  }
+  console.log(listSendEmail);
+  await Promise.all(listSendEmail);
   return res.status(201).json({
     status: "success",
     message: "Tạo thành công",

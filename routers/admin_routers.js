@@ -1,8 +1,10 @@
 const express = require("express");
 const adminController = require("../controllers/admin_controller");
 const authController = require("../controllers/auth_controller");
-const router = express.Router();
+const fileUploader = require("../configs/cloudinary.config");
 
+const router = express.Router();
+router.route("/upload-file").post(authController.protect, fileUploader.single("file"), adminController.uploadFile);
 router.route("/source-codes").get(authController.protect, authController.reStrictTo("admin"), adminController.getSourceCodes);
 router.route("/source-codes").post(authController.protect, authController.reStrictTo("admin"), adminController.createSourceCodes);
 
