@@ -115,16 +115,16 @@ exports.downloadCode = catchAsync(async (req, res, next) => {
 
   <div style=" width: 500px; padding: 10px;">
 
-    <a href=${req.headers.host}><img src=${dataSystem.home_logo} style="width: 40px; height: 40px" alt="Home Logo"></a>
+    <a href="${req.headers.referer}"><img src=${dataSystem.home_logo} style="width: 40px; height: 40px" alt="Home Logo"></a>
     <span>Hi there,</span>
     <p>Lời đầu tiên xin gửi lời cảm ơn đến bạn, vì đã ghé thăm trang web của tôi. Sau đây là thông tin download của bạn: </p>
     <li >Tên code: ${resultCode.title}</li>
     <li >Giá: ${resultCode.costs} VNĐ</li>
     <li >Link tải: ${resultCode.link}</li>
-    <li >Xem chi tiết code: <a href=${req.headers.referer}>Tại đây</a></li>
+    <li >Xem chi tiết code: <a href="${req.headers.referer}source-code/${resultCode.slug}">Tại đây</a></li>
 
     <p style="font-weight:500">Thông tin liên hệ</p>
-    <li>Website:  <a href=${req.headers.host}>${req.headers.host} </a> </li>
+    <li>Website:  <a href="${req.headers.referer}">${req.headers.referer} </a> </li>
     <li>Zalo: <a href=${dataSystem.myself_zalo}>${dataSystem.myself_zalo_name}</a></li>
     <li>Facebook: <a href=${dataSystem.myself_fb}>${dataSystem.myself_fb_name}</a></li>
     <li>Email: ${dataSystem.myself_email}</li>
